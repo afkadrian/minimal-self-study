@@ -8,12 +8,11 @@ import threading
 import ast
 import time # needed for waiting after setting axes
 import random
-from image_dir import IMAGE_DIR
 
 # Flask server for communication
 app = Flask(__name__)
 #timestemp = datetime.datetime.now()
-image_dir = IMAGE_DIR
+image_dir = "/Users/adrianschiller/Documents/IT/Minimal_Self_Seminar/Images/"
 run_id = 0
 
 IGNORE = False
@@ -185,6 +184,9 @@ class Nao(Robot):
         for ax, angle in zip(axes, angles):
             self.set_joint(ax, angle)
 
+    def get_joint_positions(self):
+        return self.joint_positions
+
     def run(self):
         """
         Main loop of the controller.
@@ -228,6 +230,12 @@ def capture_image():
     nao.catpureImage(camera=nao.cameraBottom, save_path = run_dir+body_img)
     return jsonify({"status": "success", "message": "Image saved.",
                     "image_id": id})
+
+@app.route('/proprioception', methods=['GET'])
+def proprioception():
+    joint_positions = nao.get_joint_positions()
+    return jsonify({"status": "succes", "message": "Joint positions transmitted.",
+                    "joint_positions": joint_positions})
 
 def run_flask_server():
     """Run the Flask server in a separate thread."""

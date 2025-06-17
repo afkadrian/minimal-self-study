@@ -8,11 +8,12 @@ import threading
 import ast
 import time # needed for waiting after setting axes
 import random
+from image_dir import IMAGE_DIR
 
 # Flask server for communication
 app = Flask(__name__)
 #timestemp = datetime.datetime.now()
-image_dir = "PATH-TO-PROJECT-ROOT/Images/"
+image_dir = IMAGE_DIR
 run_id = 0
 
 IGNORE = False

@@ -30,7 +30,6 @@ server_url = "http://localhost:5000"
 
 image_dir = "./Images/"
 run_id = 0
-os.mkdir(image_dir)
 
 image_id = 0
 # Tool: CaptureImage

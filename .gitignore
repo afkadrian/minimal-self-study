@@ -1,6 +1,7 @@
-Experiments/*
+Experiments
 Images
 .env
 .DS_Store
 NaoSimulation/controllers/motion_demo/image_dir.py
+NaoSimulation/worlds/*
 *__pycache__*

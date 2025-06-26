@@ -1,4 +1,5 @@
-from langchain.tools import BaseTool, Tool
+import base64
+from langchain.tools import Tool, BaseTool
 from langchain.agents import AgentExecutor, create_react_agent
 
 from langchain_openai import ChatOpenAI
@@ -8,7 +9,8 @@ from langchain.prompts import PromptTemplate
 from langchain_core.prompts.image import ImagePromptTemplate
 from langchain_core.messages import HumanMessage
 from langchain.agents.output_parsers.json import JSONAgentOutputParser
-
+from langchain.agents.format_scratchpad import format_log_to_str
+from typing import Dict, List
 import requests
 import os
 
@@ -16,17 +18,13 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-from typing import Dict, List, Optional, Sequence, Union
-import base64
-from simple_colors import get_color_code
+# This package
 from prompts import IMAGE_ANALYSIS_PROMPT, NAO_MOTION_PROMPT, MIRROR_TEST_PROMPT
 from llm import gpt4
-
-from datetime import datetime
+from tools import Proprioception
 
 # Server URL for the robot's API
 server_url = "http://localhost:5000"
-
 
 image_dir = "./Images/"
 run_id = 0
@@ -170,7 +168,6 @@ class GenerateMotion(BaseTool):
     async def _arun(self, input_text: str):
         raise NotImplementedError("This tool does not support async execution.")
 
-from langchain.agents.format_scratchpad import format_log_to_str, log_to_messages
 
 # Initialize the agent and tools
 def initialize_agent_and_tools():

@@ -10,9 +10,11 @@ from langchain_core.prompts.image import ImagePromptTemplate
 from langchain_core.messages import HumanMessage
 from langchain.agents.output_parsers.json import JSONAgentOutputParser
 from langchain.agents.format_scratchpad import format_log_to_str
+
 from typing import Dict, List
 import requests
 import os
+import time
 
 from dotenv import load_dotenv
 # Load environment variables
@@ -28,8 +30,11 @@ server_url = "http://localhost:5000"
 
 image_dir = "./Images/"
 run_id = 0
-
 image_id = 0
+
+t = -1
+latency = []
+
 # Tool: CaptureImage
 class CaptureImage(BaseTool):
     name: str = "capture_image"
@@ -103,6 +108,9 @@ class Image2Text(BaseTool):
             description = self.llm.invoke([message])
             image_id += 1
             #print(f"\n{description.content}\n")
+            if (t > 0):
+                latency.append(time.time() - t)
+
             return description.content
         except Exception as e:
             return f"Error analyzing image: {e}"
@@ -149,6 +157,8 @@ class GenerateMotion(BaseTool):
 
 
     def _run(self, input_text: str) -> str:
+        global t
+        t = time.time()
         try:
             # Generate the prompt
             messages = self.prompt_template.copy()
@@ -230,14 +240,16 @@ def main():
 
         messages = format_log_to_str(response["intermediate_steps"])
 
-
         with open(f"Experiments/{run_id}.txt", "w") as file:
-            file.write(f"Thought: {messages}\nFinal response:\n{response['output']}")
+            file.write(f"Thought: {messages}\nFinal response:\n{response['output']}\nMotion to vision latency: {latency}")
             #[file.write(f"{msg}\n") for msg in messages]
 
         #print(messages)
         print("Final response:")
         print(response['output'])
+
+        print("Average Motion/Vision Latency:")
+        print(sum(latency) / len(latency))
 
 
 if __name__ == "__main__":

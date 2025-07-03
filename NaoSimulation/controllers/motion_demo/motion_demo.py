@@ -16,6 +16,8 @@ app = Flask(__name__)
 image_dir = IMAGE_DIR
 run_id = 0
 
+control_group = False
+
 IGNORE = False
 JOINT_IDS = {
             1 : "HeadYaw",
@@ -53,8 +55,8 @@ class Nao(Robot):
         self.joint_positions = {1: 127, 2: 144, 3: 213, 4: 49,
                                 5: 127, 6: 255, 7: 127, 8: 213,
                                 9: 206, 10: 128, 11: 0, 12: 128, 
-                                13: 155, 14: 90, 15: 200, 16: 11,
-                                17: 143, 18: 87, 19: 155, 20: 151,
+                                13: 155, 14: 100, 15: 200, 16: 11,
+                                17: 143, 18: 87, 19: 155, 20: 155,
                                 21: 200, 22: 11, 23: 143, 24: 168
                                 }  # Dictionary to store target joint positions
         self.joint_translate = {}
@@ -182,8 +184,12 @@ class Nao(Robot):
         return angle
     
     def set_axes(self, axes, angles):
-        for ax, angle in zip(axes, angles):
-            self.set_joint(ax, angle)
+        if control_group:
+            for ax, angle in zip(axes, angles):
+                self.set_joint(ax, random.randint(0, 255))
+        else:
+            for ax, angle in zip(axes, angles):
+                self.set_joint(ax, angle)
 
     def get_joint_positions(self):
         return self.joint_positions

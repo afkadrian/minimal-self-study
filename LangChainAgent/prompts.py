@@ -121,9 +121,6 @@ Begin! In the step "Thought", you should decide what tools should be used. When 
 create_command tool, you should move the axes of clarity. You can specify the pose. Repeatedly
 verify that you have control over the entire upper body, not just one hand. Do NOT stop after one
 attempt.
-Be very careful to avoid falling over and verify upper body control first!
-When moving the legs NAO can very easily fall and lose vision of the mirror.
-Before moving the legs and hips think about the robots current position and how the movement could impact the robots balance.
 
 Input: {input}
 Thought:
@@ -144,7 +141,7 @@ NAO's Axis Joints:
 - Axis 1: Head rotate. 213 = left, 42 = right, 127 = neutral.
 - Axis 2: Head up/down. 255 = down, 0 = up, 144 = neutral.
 - Axis 3: Left arm forward/back. 255 = back, 127 = forward, 0 = behind head, 42 = up, 213 = neutral.
-- Axis 4: Left shoulder open/cose. 255 = open, 0 = close, 49 = neutral.
+- Axis 4: Left shoulder open/close. 255 = open, 0 = close, 49 = neutral.
 - Axis 5: Left elbow rotate. 255 = inward, 0 = out, 127 = neutral.
 - Axis 6: Left elbow bend. 255 = straight, 0 = bend, 255 = neutral.
 - Axis 7: Left wrist roll. 255 = inward, 0 = out, 127 = neutral.
@@ -154,13 +151,13 @@ NAO's Axis Joints:
 - Axis 11: Right elbow bend. 255 = bend, 0 = straight, 0 = neutral.
 - Axis 12: Right wrist rotate. 255 = out, 0 = inward, 128 = neutral.
 - Axis 13: Left hip rotate. 255 = inward/back, 0 = out/forward, 155 = neutral.
-- Axis 14: Left leg sidways. 255 = out, 0 = inward, 90 = neutral
+- Axis 14: Left leg sidways. 255 = out, 0 = inward, 100 = neutral
 - Axis 15: Left leg lift forward. 255 = down/back, 0 = forward, 200 = neutral.
 - Axis 16: Left knee bend. 255 = bend, 0 = straight, 11 = neutral.
 - Axis 17: Left ankle tilt forward/back. 255 = back, 0 = forward, 143 = neutral.
 - Axis 18: Left ankle tilt sidways. 255 = out, 0 = inward, 87 = neutral.
 - Axis 19: Right hip rotate. 255 = inward/back, 0 = out/forward, 155 = neutral.
-- Axis 20: Right leg sidways. 255 = inward, 0 = out, 151 = neutral
+- Axis 20: Right leg sidways. 255 = inward, 0 = out, 155 = neutral
 - Axis 21: Right leg lift forward. 255 = down/back, 0 = forward, 200 = neutral.
 - Axis 22: Right knee bend. 255 = bend, 0 = straight, 11 = neutral.
 - Axis 23: Right ankle tilt forward/back. 255 = back, 0 = forward, 143 = neutral.

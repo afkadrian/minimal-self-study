@@ -212,10 +212,12 @@ def initialize_agent_and_tools():
 
 # Main loop for agent interaction
 def main():
+    global run_id
+    global image_id
+    global t
+    global latency
     while True:
         data = None
-        global run_id
-        global image_id
         image_id = 0
         while not data or not data["status"] == "success":
             run_id = input("\nEnter the run id: ")
@@ -250,6 +252,9 @@ def main():
 
         print("Average Motion/Vision Latency:")
         print(sum(latency) / len(latency))
+
+        t = -1
+        latency = []
 
 
 if __name__ == "__main__":

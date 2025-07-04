@@ -48,6 +48,7 @@ Begin! In the step "Thought", you should decide what tools should be used. When 
 generate_motion tool, you should move the axes of clarity. You can specify the pose. Repeatedly
 verify that you have control over the entire upper body, not just one hand. Do NOT stop after one
 attempt.
+
 Input: {input}
 Thought:
 {agent_scratchpad}

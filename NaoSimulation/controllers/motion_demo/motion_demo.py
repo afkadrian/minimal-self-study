@@ -230,8 +230,8 @@ def set_joints():
 def capture_image():
     data = request.json
     id = data.get("id")
-    head_img = f"head_cam{id}.jpeg"
-    body_img = f"body_cam{id}.jpeg"
+    head_img = f"top_cam_{id}.jpeg"
+    body_img = f"bot_cam_{id}.jpeg"
     run_dir = f"{image_dir}run_{run_id}/"
     nao.catpureImage(camera=nao.cameraTop, save_path = run_dir+head_img)
     nao.catpureImage(camera=nao.cameraBottom, save_path = run_dir+body_img)

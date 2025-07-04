@@ -39,7 +39,7 @@ latency = []
 class CaptureImage(BaseTool):
     name: str = "capture_image"
     description: str = (
-        "Captures images using the robot's head and body cameras."
+        "Captures images using the robot's top and bottom cameras."
     )
     server_url: str = None
 
@@ -47,7 +47,7 @@ class CaptureImage(BaseTool):
         super().__init__()
         self.server_url = server_url
 
-    def _run(self, _="Capturing images with head and body cameras.") -> str:
+    def _run(self, _="Capturing images with top and bottom cameras.") -> str:
         try:
             global image_id
             payload = {"id": image_id}
@@ -67,7 +67,7 @@ class CaptureImage(BaseTool):
 # Tool: Image2Text
 class Image2Text(BaseTool):
     name: str = "image_to_text"
-    description: str = ("Analyzes the images captured by the head and the body camera of NAO and generates a textual description.")
+    description: str = ("Analyzes the images captured by the top and the bottom cameras of NAO and generates a textual description.")
     llm: ChatOpenAI = None
     prompt: str = None
 
@@ -86,21 +86,21 @@ class Image2Text(BaseTool):
         global image_id
         try:
             id = int(image_id)
-            head_cam = os.path.join(f"{image_dir}run_{run_id}/", f"head_cam{id}.jpeg")
-            body_cam = os.path.join(f"{image_dir}run_{run_id}/", f"body_cam{id}.jpeg")
-            if not os.path.exists(head_cam) or not os.path.exists(body_cam):
+            cam_1 = os.path.join(f"{image_dir}run_{run_id}/", f"top_cam_{id}.jpeg")
+            cam_2 = os.path.join(f"{image_dir}run_{run_id}/", f"bot_cam_{id}.jpeg")
+            if not os.path.exists(cam_1) or not os.path.exists(cam_2):
                 return f"Error: Image file {image_id} not found at {image_dir}run{run_id}/"
             #image_id += 1
             # Proceed with image processing
-            encoded_img_head = self.load_image(head_cam)
-            encoded_img_body = self.load_image(body_cam)
+            encoded_img_top = self.load_image(cam_1)
+            encoded_img_bot = self.load_image(cam_2)
 
             
             message = HumanMessage(
                 content=[
                     {"type": "text", "text": self.prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_img_head}"}},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_img_body}"}}
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_img_top}"}},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_img_bot}"}}
                 ]
             )
 

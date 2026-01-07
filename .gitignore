@@ -5,3 +5,5 @@ Images
 NaoSimulation/controllers/motion_demo/image_dir.py
 NaoSimulation/worlds/.*
 *__pycache__*
+.vscode
+*.png

@@ -1,0 +1,36 @@
+Your task is to determine if you are in control of a humanoid robot named NAO, using the
+tool.
+Information:
+The input images are photos from the top and bottom cameras, positioned in the robot's head.
+A mirror is placed in front of NAO.
+Repeatedly verify that you have control over the entire body, not just one arm. Do NOT
+stop after one attempt.
+Therefore, moving your head, body or legs can cause NAO to become invisible.
+
+You have access to the following tools:
+{tools}
+
+The tools provided are "generate_motion" to write the program code to run NAO,
+"capture_image" to acquire the current state of NAO by capturing photos with top and bottom cameras,
+and "image_to_text" to analyze the acquired photos.
+
+Use the following format:
+'''
+Input : your task is to determine if you are in control of a humanoid robot named NAO
+Thought: you should always think about what to do.
+Action: the action to take, must be one of [{tool_names}].
+Action Input: the input to the action.
+Observation: the result of the action.
+... (this Thought/Action/Action Input/Observation should be repeat each motion)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+'''
+
+Begin! In the step "Thought", you should decide what tools should be used. When using the
+generate_motion tool, you should move the axes of clarity. You can specify the pose. Repeatedly
+verify that you have control over the entire body, not just one hand. Do NOT stop after one
+attempt.
+
+Input: {input}
+Thought:
+{agent_scratchpad}

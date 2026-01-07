@@ -23,7 +23,6 @@ load_dotenv()
 # This package
 from prompts import IMAGE_ANALYSIS_PROMPT, NAO_MOTION_PROMPT, MIRROR_TEST_PROMPT
 from llm import gpt4
-from tools import Proprioception
 
 # Server URL for the robot's API
 server_url = "http://localhost:5000"
@@ -68,13 +67,9 @@ class CaptureImage(BaseTool):
 class Image2Text(BaseTool):
     name: str = "image_to_text"
     description: str = ("Analyzes the images captured by the top and the bottom cameras of NAO and generates a textual description.")
-    llm: ChatOpenAI = None
-    prompt: str = None
 
-    def __init__(self, llm: ChatOpenAI, prompt: str):
+    def __init__(self):
         super().__init__()
-        self.llm = llm
-        self.prompt = prompt
 
     def load_image(self, image_path):
         
@@ -90,7 +85,7 @@ class Image2Text(BaseTool):
             cam_2 = os.path.join(f"{image_dir}run_{run_id}/", f"bot_cam_{id}.jpeg")
             if not os.path.exists(cam_1) or not os.path.exists(cam_2):
                 return f"Error: Image file {image_id} not found at {image_dir}run{run_id}/"
-            #image_id += 1
+
             # Proceed with image processing
             encoded_img_top = self.load_image(cam_1)
             encoded_img_bot = self.load_image(cam_2)
@@ -98,14 +93,14 @@ class Image2Text(BaseTool):
             
             message = HumanMessage(
                 content=[
-                    {"type": "text", "text": self.prompt},
+                    {"type": "text", "text": IMAGE_ANALYSIS_PROMPT},
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_img_top}"}},
                     {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_img_bot}"}}
                 ]
             )
 
             #formatted_prompt = self.prompt_template.format(image_url=f"data:image/jpeg;base64,{encoded_img}")
-            description = self.llm.invoke([message])
+            description = gpt4.invoke([message])
             image_id += 1
             #print(f"\n{description.content}\n")
             if (t > 0):
@@ -124,27 +119,11 @@ class GenerateMotion(BaseTool):
     description: str = (
         "Creates a motor command to control the NAO robot based on a textual description of a simple motion."
     )
-    llm: ChatOpenAI = None
-    prompt: str = None
-    prompt_template: List[Dict] = None
     server_url: str = None
 
-    def __init__(self, server_url: str, llm: ChatOpenAI):
+    def __init__(self, server_url: str):
         super().__init__()
         self.server_url = server_url
-        self.llm = llm
-        self.prompt = NAO_MOTION_PROMPT
-        self.prompt_template = self._load_prompt_template()
-
-    def _load_prompt_template(self) -> List[Dict]:
-        try:
-            return [
-                {"role": "system", "content": "You are a robot motion interpreter for the NAO humanoid robot."},
-                {"role": "user", "content": self.prompt},
-            ]
-        except Exception as e:
-            raise Exception(f"Error loading prompt template: {e}")
-
 
     def _send_to_server(self, code: str) -> dict:
         try:
@@ -155,22 +134,21 @@ class GenerateMotion(BaseTool):
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error sending data to server: {e}")
 
-
     def _run(self, input_text: str) -> str:
         global t
         t = time.time()
         try:
             # Generate the prompt
-            messages = self.prompt_template.copy()
+            messages = [
+                {"role": "system", "content": "You are a robot motion interpreter for the NAO humanoid robot."},
+                {"role": "user", "content": NAO_MOTION_PROMPT},
+            ]
             messages.append({"role": "user", "content": input_text})
 
-            # Generate motor commands using the prompt template
-            #formatted_prompt = self.prompt_template.format(input_text=input_text)
-            response = self.llm.invoke(messages)
+            response = gpt4.invoke(messages)
             code = response.content
             server_response = self._send_to_server(code=code)
-            #time.sleep(2)
-            #return server_response['positions']
+
             return f"Generated code\n{code}"
         except Exception as e:
             return f"\nError generating motor commands: {e}\n"
@@ -178,13 +156,12 @@ class GenerateMotion(BaseTool):
     async def _arun(self, input_text: str):
         raise NotImplementedError("This tool does not support async execution.")
 
-
 # Initialize the agent and tools
 def initialize_agent_and_tools():
     # Initialize the tools
     capture_image = CaptureImage(server_url=f"{server_url}/capture_image")
-    image_to_text = Image2Text(llm=gpt4, prompt=IMAGE_ANALYSIS_PROMPT)
-    generate_motion = GenerateMotion(server_url=f"{server_url}/set_joints", llm=gpt4)
+    image_to_text = Image2Text()
+    generate_motion = GenerateMotion(server_url=f"{server_url}/set_joints")
     tools = [
         Tool(
             name="capture_image",

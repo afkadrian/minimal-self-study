@@ -1,3 +1,4 @@
+import math
 from controller import Robot, Keyboard, Motion
 from PIL import Image
 import numpy as np
@@ -16,9 +17,9 @@ app = Flask(__name__)
 image_dir = IMAGE_DIR
 run_id = 0
 
-control_group = False
-
 IGNORE = False
+DEGREES = False
+
 JOINT_IDS = {
             1 : "HeadYaw",
             2 : "HeadPitch",
@@ -52,18 +53,32 @@ class Nao(Robot):
         self.currentlyPlaying = False
         self.command = None
         self.motors = {}  # Dictionary to store joint devices
-        self.joint_positions = {1: 127, 2: 144, 3: 213, 4: 49,
-                                5: 127, 6: 255, 7: 127, 8: 213,
-                                9: 206, 10: 128, 11: 0, 12: 128, 
-                                13: 155, 14: 100, 15: 200, 16: 11,
-                                17: 143, 18: 87, 19: 155, 20: 155,
-                                21: 200, 22: 11, 23: 143, 24: 168
+        if not DEGREES:
+            self.joint_positions = {1: 127, 2: 144, 3: 213, 4: 49,
+                                    5: 127, 6: 255, 7: 127, 8: 213,
+                                    9: 206, 10: 128, 11: 0, 12: 128, 
+                                    13: 155, 14: 100, 15: 200, 16: 11,
+                                    17: 143, 18: 87, 19: 155, 20: 155,
+                                    21: 200, 22: 11, 23: 143, 24: 168
                                 }  # Dictionary to store target joint positions
+        else:
+            self.joint_positions = {1: 0.0, 2: 0.0, 3: 90.0, 4: 0.0,
+                                    5: 0.0, 6: 0.0, 7: 0.0, 8: 90.0,
+                                    9: 0.0, 10: 0.0, 11: 0.0, 12: 0.0, 
+                                    13: 0.0, 14: 4.55, 15: 0.0, 16: 0.0,
+                                    17: 0.0, 18: 0.0, 19: 0.0, 20: -0.93,
+                                    21: 0.0, 22: 0.0, 23: 0.0, 24: 0.0
+                                }  # Dictionary to store target joint positions
+
         self.joint_translate = {}
         # Initialize stuff
         self.findAndEnableDevices()
+        dictionary = self.get_joint_positions()
+        #for joint in dictionary.keys():
+            #print(joint+": "+str(dictionary[joint]) + " " + str(round(self.motors[joint].getMinPosition()* 180/math.pi,2)) + " " + str(round(self.motors[joint].getMaxPosition()* 180/math.pi,2)))
 
-    def catpureImage(self, camera, save_path):
+            
+    def captureImage(self, camera, save_path):
         width = camera.getWidth()
         height = camera.getHeight()
         print(save_path)
@@ -111,7 +126,7 @@ class Nao(Robot):
             "RAnklePitch": self.getDevice("RAnklePitch"),
             "RAnkleRoll": self.getDevice("RAnkleRoll")
         }
-
+        #values
         for i in range(1, 25):
             self.joint_translate[i] = (((self.motors[JOINT_IDS[i]].getMaxPosition()-self.motors[JOINT_IDS[i]].getMinPosition())/255), self.motors[JOINT_IDS[i]].getMinPosition())
 
@@ -172,27 +187,59 @@ class Nao(Robot):
         self.keyboard = self.getKeyboard()
         self.keyboard.enable(10 * self.timeStep)
 
-    def set_joint(self, joint, angle):
+    def get_rad(self, joint, angle):
         if angle == 255:
             rad = self.motors[JOINT_IDS[joint]].getMaxPosition()
         elif angle == 0:
             rad = self.motors[JOINT_IDS[joint]].getMinPosition()
         else:
             rad = angle*self.joint_translate[joint][0] + self.joint_translate[joint][1]
-        self.motors[JOINT_IDS[joint]].setPosition(rad)
-        self.joint_positions[joint] = angle
+        return rad
+
+
+    def set_joint(self, joint, angle):
+        rad = self.get_rad(joint, angle)
+        self.motors[JOINT_IDS[joint]].setPosition(self.get_rad(joint, angle))
+        if not DEGREES:
+            self.joint_positions[joint] = angle
+        else:
+            self.joint_positions[joint] = round(rad*(180/math.pi), 2)
         return angle
     
     def set_axes(self, axes, angles):
-        if control_group:
+        if IGNORE:
             for ax, angle in zip(axes, angles):
                 self.set_joint(ax, random.randint(0, 255))
         else:
-            for ax, angle in zip(axes, angles):
-                self.set_joint(ax, angle)
+            if not DEGREES:
+                for ax, angle in zip(axes, angles):
+                    self.set_joint(ax, angle)
+            else:
+                for ax, angle in zip(axes, angles):
+                    self.set_joint_angle(ax, angle)
+    #angles
+    def set_joint_angle(self, joint, angle):
+        rad = angle * (math.pi/180)
+        if rad < self.motors[JOINT_IDS[joint]].getMinPosition():
+            rad = self.motors[JOINT_IDS[joint]].getMinPosition()
+        elif rad > self.motors[JOINT_IDS[joint]].getMaxPosition():
+            rad = self.motors[JOINT_IDS[joint]].getMaxPosition()
+        
+        self.motors[JOINT_IDS[joint]].setPosition(rad)
+        self.joint_positions[joint] = round(rad * (180/math.pi), 2)
 
     def get_joint_positions(self):
-        return self.joint_positions
+        positions = {}
+        if not DEGREES:
+            for joint in range(1, 25):
+                positions[JOINT_IDS[joint]] = round(self.get_rad(joint, self.joint_positions[joint]) * 180/math.pi, 2)
+                #print("*"*100)
+                #print(self.motors[JOINT_IDS[joint]].getValue())
+        else:
+            for joint in range(1, 25):
+                positions[JOINT_IDS[joint]] = round(self.joint_positions[joint], 2)
+            
+        return positions
 
     def run(self):
         """
@@ -201,8 +248,14 @@ class Nao(Robot):
         print("Starting NAO Motion Control Demo.")
         while self.step(self.timeStep) != -1:
             # Apply the target joint positions
-            for joint_id, angle in self.joint_positions.items():
-                self.set_joint(joint_id, angle)
+            if not DEGREES:
+                for joint_id, angle in self.joint_positions.items():
+                    self.set_joint(joint_id, angle)
+            
+            else:
+                for joint, angle in self.joint_positions.items():
+                    self.set_joint_angle(joint, angle)
+                    #print("*"*10)
 
 @app.route('/run_id', methods=['POST'])
 def set_run_id():
@@ -214,6 +267,7 @@ def set_run_id():
         return jsonify({"status": "failure", "message": f"{e}\nRun ID {run_id} has been used. Please enter another ID"})
     return jsonify({"status": "success", "message": f"Run ID {run_id} has been set"})
 
+
 @app.route('/set_joints', methods=['POST'])
 def set_joints():
     data = request.json
@@ -224,7 +278,29 @@ def set_joints():
     code = data.get("code")
     print(f"Method call: {code}")
     exec(f"{code}")
-    return jsonify({"status": "success", "message": "Joint positions updated", "positions": f"{nao.joint_positions}", "code": code})
+    return jsonify({"status": "success", "message": "Joint positions updated", "positions": str(nao.get_joint_positions()), "code": code})
+
+
+#@app.route('/record_set_joints', methods=['POST'])
+#def record_set_joints():
+#    data = request.json
+#    print("*"*10)
+#    print(data)
+#    print("*"*10)
+#    #code = ast.literal_eval(str(data.get("code")))
+#    code = str(data.get("code"))
+#    id = data.get("id")
+#    insert = code.find("])\ntime")
+#    run_dir = f"{image_dir}run_{run_id}/"
+#    i=0
+#    while insert != -1:
+#        code = code[:insert+2] + f"\nnao.captureImage(camera=nao.cameraTop, save_path = \"{run_dir}\"+\"top_cam_{id}_{i}.jpeg\")\nnao.captureImage(camera=nao.cameraBottom, save_path = \"{run_dir}\"+\"bot_cam_{id}_{id}.jpeg\")" + code[insert+2:]
+#        insert = code.find("])\ntime")
+#        i += 1
+#    print(f"Method call: {code}")
+#    exec(f"{code}")
+#    return jsonify({"status": "success", "message": "Joint positions updated", "positions": f"{nao.joint_positions}", "code": code})
+
 
 @app.route('/capture_image', methods=['POST'])
 def capture_image():
@@ -233,8 +309,8 @@ def capture_image():
     head_img = f"top_cam_{id}.jpeg"
     body_img = f"bot_cam_{id}.jpeg"
     run_dir = f"{image_dir}run_{run_id}/"
-    nao.catpureImage(camera=nao.cameraTop, save_path = run_dir+head_img)
-    nao.catpureImage(camera=nao.cameraBottom, save_path = run_dir+body_img)
+    nao.captureImage(camera=nao.cameraTop, save_path = run_dir+head_img)
+    nao.captureImage(camera=nao.cameraBottom, save_path = run_dir+body_img)
     return jsonify({"status": "success", "message": "Image saved.",
                     "image_id": id})
 
